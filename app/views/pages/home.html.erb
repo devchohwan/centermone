@@ -1,0 +1,231 @@
+<style>
+  /* 모든 이미지에 미세 회전 안티앨리어싱 적용 */
+  .linkinbio-container img {
+    transform: rotate(0.04deg);
+    image-rendering: -webkit-optimize-contrast; /* 선명도 보정 */
+    backface-visibility: hidden; /* 렌더링 안정화 */
+  }
+</style>
+
+<div class="linkinbio-container">
+  <div class="profile-section">
+    <div class="avatar">
+      <img src="/1번.webp" alt="Profile" />
+    </div>
+    <div class="avatar">
+      <img src="/2번.webp" alt="Profile" />
+    </div>
+    <div class="avatar">
+      <img src="/3번.gif" alt="Profile" />
+    </div>
+    <div class="avatar">
+      <img src="/4번.webp" alt="Profile" />
+    </div>
+    <hr class="divider-line" />
+  </div>
+
+  <div style="text-align: center; margin: 24px 0 16px 0;">
+    <img src="/미쿠모네_수정.png" alt="Miku Mone" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-top: 20px; transform: rotate(0.04deg);" />
+  </div>
+
+  <h4 style="text-align: center; color: #333; margin: 24px 0 16px 0; font-size: 20px;">1. 바로 궁금증 해소하기</h4>
+
+  <div class="intro-text">
+    <p>제이팝, 보카로 고민을</p>
+    <p>마음 편히 얘기해보세요!</p>
+    <p><strong>수강생 5천명 데이터</strong>로 답해줄게요😉</p>
+  </div>
+
+<div id="n8n-chat-container" style="border:1px solid #ddd; border-radius:12px; padding:20px; max-width:450px; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family: sans-serif; margin: 24px auto;">
+    
+    <div id="chat-messages" style="height:320px; overflow-y:auto; margin-bottom:20px; padding:0; background:transparent; font-size:14px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <img src="https://placehold.co/40x40/333/fff?text=M" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; transform: rotate(0.04deg);">
+        <div style="background:#f1f1f1; color:#333; padding:10px 16px; border-radius: 18px; white-space: pre-wrap; word-break: break-word; line-height: 1.5;">예시) 나도 제이팝 잘 부를 수 있나?</div>
+      </div>
+    </div>
+    
+    <div style="display:flex; gap:8px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+      <input type="text" id="user-input" placeholder="메시지를 입력하세요..." style="flex:1; border:1px solid #ccc; border-radius:10px; padding:12px; outline:none; font-size: 14px;" onkeypress="if(event.keyCode==13) sendMessage()">
+      <button onclick="sendMessage()" style="background:#000; color:#fff; border:none; border-radius:10px; padding:0 20px; cursor:pointer; font-weight:bold;">전송</button>
+    </div>
+</div>
+
+<script>
+    const currentSessionId = "user_" + Math.random().toString(36).substr(2, 9);
+
+    // [수정포인트] 각 이미지 HTML에 transform: rotate(0.04deg); 추가
+    const thinkingImgHtml = `<img src="/생각.png?text=💭" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; transform: rotate(0.04deg);">`;
+    const answerImgHtml   = `<img src="/미쿠모네_수정.png?text=🤖" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; transform: rotate(0.04deg);">`;
+
+    function typeWriter(text, element, chatWindow) {
+      let i = 0;
+      const speed = 25;
+      function type() {
+        if (i < text.length) {
+          element.textContent += text.charAt(i);
+          i++;
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+          setTimeout(type, speed);
+        }
+      }
+      type();
+    }
+
+    async function sendMessage() {
+      const inputField = document.getElementById("user-input");
+      const chatWindow = document.getElementById("chat-messages");
+      const text = inputField.value.trim();
+      if (!text) return;
+      
+      chatWindow.innerHTML += `
+        <div style="display: flex; justify-content: flex-end;">
+          <span style="background:#000; color:#fff; padding:10px 16px; border-radius: 18px; max-width: 80%; line-height: 1.5; white-space: pre-wrap; word-break: break-word; transform: rotate(0.04deg);">${text}</span>
+        </div>`;
+      inputField.value = "";
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      const loadingId = "loading-" + Date.now();
+      const dotsId = "dots-" + loadingId;
+      chatWindow.innerHTML += `
+        <div id="${loadingId}" style="display: flex; align-items: flex-start; gap: 10px;">
+          ${thinkingImgHtml}
+          <span style="background:#f1f1f1; color:#888; padding:10px 16px; border-radius: 18px; font-size:13px; transform: rotate(0.04deg);">생각 중이에요<span id="${dotsId}"></span></span>
+        </div>`;
+      
+      let dotCount = 0;
+      const dotInterval = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        const dotsElement = document.getElementById(dotsId);
+        if(dotsElement) dotsElement.textContent = ".".repeat(dotCount);
+      }, 500);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      
+      try {
+        const response = await fetch("https://webhook-processor-production-5e1d.up.railway.app/webhook/a2e28e73-31e9-44b8-9759-7695046643ea/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chatInput: text, sessionId: currentSessionId })
+        });
+        
+        if (!response.ok) throw new Error("네트워크 응답 오류");
+        const data = await response.json();
+        
+        clearInterval(dotInterval);
+        const loadingElement = document.getElementById(loadingId);
+        if (loadingElement) loadingElement.remove();
+
+        let botReply = "";
+        if (Array.isArray(data)) {
+          botReply = data[0].output || data[0].text || "답변을 가져오지 못했습니다.";
+        } else {
+          botReply = data.output || data.text || "답변을 가져오지 못했습니다.";
+        }
+        
+        const responseId = "res-" + Date.now();
+        chatWindow.innerHTML += `
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            ${answerImgHtml}
+            <span id="${responseId}" style="background:#f1f1f1; color:#333; padding:10px 16px; border-radius: 18px; max-width: 80%; line-height: 1.5; white-space: pre-wrap; word-break: break-word; transform: rotate(0.04deg);"></span>
+          </div>`;
+        
+        const responseElement = document.getElementById(responseId);
+        typeWriter(botReply.trim(), responseElement, chatWindow);
+
+      } catch (error) {
+        clearInterval(dotInterval);
+        const loadingElement = document.getElementById(loadingId);
+        if (loadingElement) loadingElement.remove();
+        chatWindow.innerHTML += `<div style="color:red; font-size:12px; margin-left: 46px;">❌ 오류가 발생했습니다.</div>`;
+      }
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+</script>
+
+  <div>
+    <hr class="horizontal-divider" style="margin-bottom: 80px;" />
+  </div>
+
+  <div style="text-align: center; margin: 24px 0 16px 0;">
+    <img src="/offline2.jpg" alt="Miku Mone" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; transform: rotate(0.04deg);" />
+  </div>
+
+  <h4 style="text-align: center; color: #333; margin: 24px 0 16px 0; font-size: 20px;">2. 오프라인 모네뮤직</h4>
+
+  <div class="intro-text">
+    <p>제이팝-보카로에 진심이라면?</p>
+    <p>이젠 마음 편히 배우세요</p>
+    <p style="font-size: 80%;"><br><strong>🔽오프라인 수강생 커버🔽</strong></p>
+  </div>
+
+  <div class="video-container">
+    <iframe src="https://www.youtube.com/embed/ba567Df3seI" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+
+  <div class="links-section">
+    <a href="https://vo.la/fYXbKP" class="link-card link-card-blue" target="_blank">
+      <div class="link-content">
+        <span class="link-title">😉오프라인 수업 둘러보기(클릭)</span>
+      </div>
+    </a>
+    <hr class="horizontal-divider" style="margin-bottom: 40px;"/>
+  </div>
+
+  <div style="text-align: center; margin: 24px 0 16px 0;">
+    <img src="/녹음고민1.png" alt="Miku Mone" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; transform: rotate(0.04deg);" />
+  </div>
+
+  <h4 style="text-align: center; color: #333; margin: 24px 0 16px 0; font-size: 20px;">3. 목표곡 테스트하기</h4>
+
+  <div class="intro-text">
+    <p>내가 하고 싶은 노래,</p>
+    <p>얼마나 걸릴까?</p>
+    <p>'1분 목표곡 테스트!'</p>
+    <p><br>⏱️</p>
+    <p>오늘 테스트를 마치면</p>
+    <p><strong>55,000원 '발성의 정석'</p>
+    <p>강의가 😲0원!</strong></p>
+  </div>
+
+  <div class="avatar" style="text-align: center;">
+    <img src="/테스트.gif" alt="Profile" style="transform: rotate(0.04deg);" />
+  </div>
+
+  <div class="links-section">
+    <a href="https://vo.la/7EAiAj" class="link-card link-card-blue" target="_blank">
+      <div class="link-content">
+        <span class="link-title">🤔55,000원 강의 0원에 보기(클릭)</span>
+      </div>
+    </a>
+    <hr class="horizontal-divider" style="margin-bottom: 40px;"/>
+  </div>
+
+  <div style="text-align: center; margin: 24px 0 16px 0;">
+    <img src="/온라인.png" alt="Miku Mone" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; transform: rotate(0.04deg);" />
+  </div>
+
+  <h4 style="text-align: center; color: #333; margin: 24px 0 16px 0; font-size: 20px;">4. 온라인 모네뮤직</h4>
+
+  <div class="intro-text">
+    <p><strong>현재 유일한 모네쌤 직강!</strong></p>
+    <p>오프라인 커리큘럼을 집에서도!</p>
+    <p>온라인강의 바로가기</p>
+    <p style="font-size: 80%;"><br><strong>🔽온라인강의 수강생 커버🔽</strong></p>
+  </div>
+
+  <div class="video-container">
+    <iframe src="https://www.youtube.com/embed/M3ITDe6HkNM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+
+  <div class="links-section">
+    <a href="https://vo.la/crXYBa" class="link-card link-card-blue" target="_blank">
+      <div class="link-content">
+        <span class="link-title">😎제이팝, 보카로 인강은 여기만 있어요!(클릭)</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer-section">
+    <p>© 2024 All Rights Reserved</p>
+  </div>
+</div>
