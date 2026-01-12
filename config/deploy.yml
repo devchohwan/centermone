@@ -78,7 +78,7 @@ builder:
   arch: amd64
 
   # Build image via remote server (useful for faster amd64 builds on arm64 computers)
-  # remote: ssh://root@115.68.195.125
+  remote: ssh://root@115.68.195.125
 
 # Use a different ssh user than root
 ssh:
